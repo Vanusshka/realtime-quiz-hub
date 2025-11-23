@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -5,19 +6,33 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, Medal, Award, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const mockLeaderboard = [
-  { rank: 1, name: "Sarah Johnson", score: 98, time: "2:45", avatar: "SJ" },
-  { rank: 2, name: "Michael Chen", score: 95, time: "3:12", avatar: "MC" },
-  { rank: 3, name: "Emma Williams", score: 92, time: "3:30", avatar: "EW" },
-  { rank: 4, name: "James Brown", score: 88, time: "3:45", avatar: "JB" },
-  { rank: 5, name: "Olivia Davis", score: 85, time: "4:02", avatar: "OD" },
-  { rank: 6, name: "Liam Martinez", score: 82, time: "4:15", avatar: "LM" },
-  { rank: 7, name: "Sophia Garcia", score: 78, time: "4:30", avatar: "SG" },
-  { rank: 8, name: "Noah Wilson", score: 75, time: "4:45", avatar: "NW" },
-];
-
 const Leaderboard = () => {
   const navigate = useNavigate();
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
+
+  const fetchLeaderboard = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch("http://localhost:5000/api/users/leaderboard", {
+        headers: {
+          "x-auth-token": token || "",
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLeaderboard(data);
+      }
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -53,7 +68,7 @@ const Leaderboard = () => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
-          
+
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary to-accent rounded-full mb-4">
               <Trophy className="w-10 h-10 text-primary-foreground" />
@@ -71,42 +86,50 @@ const Leaderboard = () => {
             <CardDescription>See how you compare with other quiz takers</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {mockLeaderboard.map((entry) => (
-              <div
-                key={entry.rank}
-                className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all hover:shadow-md ${
-                  entry.rank <= 3 ? "bg-gradient-to-r " + getRankColor(entry.rank) + " text-white border-transparent" : "bg-card"
-                }`}
-              >
-                <div className="flex items-center justify-center w-12">
-                  {getRankIcon(entry.rank)}
-                </div>
-                
-                <Avatar className="w-12 h-12 border-2">
-                  <AvatarFallback className={entry.rank <= 3 ? "bg-white/20 text-white" : "bg-gradient-to-br from-primary to-accent text-primary-foreground"}>
-                    {entry.avatar}
-                  </AvatarFallback>
-                </Avatar>
+            {loading ? (
+              <div className="text-center py-8">Loading leaderboard...</div>
+            ) : leaderboard.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">No data available yet.</div>
+            ) : (
+              leaderboard.map((entry, index) => {
+                const rank = index + 1;
+                return (
+                  <div
+                    key={entry._id._id}
+                    className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all hover:shadow-md ${rank <= 3 ? "bg-gradient-to-r " + getRankColor(rank) + " text-white border-transparent" : "bg-card"
+                      }`}
+                  >
+                    <div className="flex items-center justify-center w-12">
+                      {getRankIcon(rank)}
+                    </div>
 
-                <div className="flex-1">
-                  <h3 className={`font-semibold text-lg ${entry.rank <= 3 ? "text-white" : ""}`}>
-                    {entry.name}
-                  </h3>
-                  <p className={`text-sm ${entry.rank <= 3 ? "text-white/80" : "text-muted-foreground"}`}>
-                    Time: {entry.time}
-                  </p>
-                </div>
+                    <Avatar className="w-12 h-12 border-2">
+                      <AvatarFallback className={rank <= 3 ? "bg-white/20 text-white" : "bg-gradient-to-br from-primary to-accent text-primary-foreground"}>
+                        {entry._id.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
 
-                <div className="text-right">
-                  <div className={`text-3xl font-bold ${entry.rank <= 3 ? "text-white" : "text-primary"}`}>
-                    {entry.score}
+                    <div className="flex-1">
+                      <h3 className={`font-semibold text-lg ${rank <= 3 ? "text-white" : ""}`}>
+                        {entry._id.name}
+                      </h3>
+                      <p className={`text-sm ${rank <= 3 ? "text-white/80" : "text-muted-foreground"}`}>
+                        Quizzes: {entry.quizzesTaken}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <div className={`text-3xl font-bold ${rank <= 3 ? "text-white" : "text-primary"}`}>
+                        {entry.totalScore}
+                      </div>
+                      <p className={`text-sm ${rank <= 3 ? "text-white/80" : "text-muted-foreground"}`}>
+                        points
+                      </p>
+                    </div>
                   </div>
-                  <p className={`text-sm ${entry.rank <= 3 ? "text-white/80" : "text-muted-foreground"}`}>
-                    points
-                  </p>
-                </div>
-              </div>
-            ))}
+                );
+              })
+            )}
           </CardContent>
         </Card>
       </div>

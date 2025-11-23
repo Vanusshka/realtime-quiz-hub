@@ -115,3 +115,53 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Glassmorphism effect */
+@layer components {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+  }
+
+  .glass-card-light {
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(30px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .dark .glass-card {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  .dark .glass-card-light {
+    background: rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  }
+
+  /* Glass card text styling */
+  .glass-card-light label,
+  .glass-card-light .text-muted-foreground {
+    color: rgba(255, 255, 255, 0.95) !important;
+  }
+
+  .glass-card-light input {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+  }
+
+  .glass-card-light input::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  .glass-card-light input:focus {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+  }
+}
