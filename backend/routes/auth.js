@@ -50,8 +50,16 @@ router.post('/register', [
       payload,
       process.env.JWT_SECRET,
       { expiresIn: '7d' },
-      (err, token) => {
+      async (err, token) => {
         if (err) throw err;
+        
+        // If student, include available quizzes
+        let quizzes = [];
+        if (user.userType === 'student') {
+          const Quiz = require('../models/Quiz');
+          quizzes = await Quiz.find({ isActive: true }).sort({ createdAt: -1 });
+        }
+        
         res.json({
           token,
           user: {
@@ -60,7 +68,8 @@ router.post('/register', [
             email: user.email,
             userType: user.userType,
             rollNo: user.rollNo
-          }
+          },
+          quizzes: quizzes
         });
       }
     );
@@ -109,8 +118,16 @@ router.post('/login', [
       payload,
       process.env.JWT_SECRET,
       { expiresIn: '7d' },
-      (err, token) => {
+      async (err, token) => {
         if (err) throw err;
+        
+        // If student, include available quizzes
+        let quizzes = [];
+        if (user.userType === 'student') {
+          const Quiz = require('../models/Quiz');
+          quizzes = await Quiz.find({ isActive: true }).sort({ createdAt: -1 });
+        }
+        
         res.json({
           token,
           user: {
@@ -119,7 +136,8 @@ router.post('/login', [
             email: user.email,
             userType: user.userType,
             rollNo: user.rollNo
-          }
+          },
+          quizzes: quizzes
         });
       }
     );

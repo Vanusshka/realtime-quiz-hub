@@ -61,7 +61,7 @@ const Quiz = () => {
     setQuizSettings(parsedSettings);
     
     if (parsedSettings.quizId) {
-      loadQuizFromDatabase(parsedSettings.quizId);
+      loadQuizFromDatabase(parsedSettings.quizId, parsedSettings.timeLimit);
     } else {
       // Fallback to sample questions
       setQuiz({ questions: sampleQuestions, timeLimit: 300 });
@@ -70,7 +70,7 @@ const Quiz = () => {
     }
   }, [navigate]);
 
-  const loadQuizFromDatabase = async (quizId: string) => {
+  const loadQuizFromDatabase = async (quizId: string, timeLimit: number) => {
     try {
       const authToken = localStorage.getItem('authToken');
       if (!authToken) {
@@ -103,7 +103,7 @@ const Quiz = () => {
   };
 
   useEffect(() => {
-    if (quizSettings?.mode === "timed" && timeLeft > 0 && !loading) {
+    if (quizSettings?.mode === "timed" && timeLeft > 0 && !loading && quiz) {
       const timer = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
@@ -115,7 +115,7 @@ const Quiz = () => {
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [timeLeft, quizSettings, loading]);
+  }, [timeLeft, quizSettings, loading, quiz]);
 
   const handleAnswerSelect = (answerIndex: number) => {
     const newAnswers = [...selectedAnswers];
@@ -128,7 +128,8 @@ const Quiz = () => {
   };
 
   const handleNext = () => {
-    if (quiz && currentQuestion < quiz.questions.length - 1) {
+    const questions = quiz?.questions || sampleQuestions;
+    if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setShowFeedback(false);
     }
@@ -142,59 +143,57 @@ const Quiz = () => {
   };
 
   const handleSubmit = async () => {
-    if (!quiz) return;
-
-    const questions = quiz.questions;
-    const correctAnswers = selectedAnswers.filter((ans, idx) => ans === questions[idx].correctAnswer).length;
-    const initialTime = quiz.timeLimit || 300;
+    const questions = quiz?.questions || sampleQuestions;
+    const correctAnswers = selectedAnswers.filter((ans, idx) => {
+      const correctAnswer = quiz ? questions[idx].correctAnswer : questions[idx].correct;
+      return ans === correctAnswer;
+    }).length;
+    
+    const initialTime = quiz?.timeLimit || 300;
     const timeTaken = quizSettings?.mode === "timed" ? initialTime - timeLeft : null;
-    const score = (correctAnswers / questions.length) * 100;
     
     const results = {
       score: correctAnswers,
       total: questions.length,
       timeTaken,
       answers: selectedAnswers,
-      quizTitle: quiz.title,
+      quizTitle: quiz?.title || "Sample Quiz",
     };
     
-    // Store in localStorage
     localStorage.setItem("quizResults", JSON.stringify(results));
     
-    // Submit to backend database
-    try {
-      const authToken = localStorage.getItem('authToken');
-      
-      if (authToken && quizSettings.quizId) {
-        // Prepare answers for backend
-        const answersForBackend = selectedAnswers.map((answer, idx) => ({
-          questionId: idx,
-          selectedAnswer: answer !== null ? answer : -1,
-          isCorrect: answer === questions[idx].correctAnswer,
-          timeSpent: timeTaken ? Math.floor(timeTaken / questions.length) : 0
-        }));
+    // Submit to backend if it's a database quiz
+    if (quiz && quizSettings?.quizId) {
+      try {
+        const authToken = localStorage.getItem('authToken');
         
-        const response = await fetch(`http://localhost:5000/api/quiz/${quizSettings.quizId}/submit`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-auth-token': authToken,
-          },
-          body: JSON.stringify({
-            answers: answersForBackend,
-            timeTaken: timeTaken || 0,
-          }),
-        });
-        
-        if (response.ok) {
-          const result = await response.json();
-          console.log('✅ Quiz results saved to database:', result);
-        } else {
-          console.error('Failed to save results');
+        if (authToken) {
+          const answersForBackend = selectedAnswers.map((answer, idx) => ({
+            questionId: idx,
+            selectedAnswer: answer !== null ? answer : -1,
+            isCorrect: answer === questions[idx].correctAnswer,
+            timeSpent: timeTaken ? Math.floor(timeTaken / questions.length) : 0
+          }));
+          
+          const response = await fetch(`http://localhost:5000/api/quiz/${quizSettings.quizId}/submit`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-auth-token': authToken,
+            },
+            body: JSON.stringify({
+              answers: answersForBackend,
+              timeTaken: timeTaken || 0,
+            }),
+          });
+          
+          if (response.ok) {
+            console.log('✅ Quiz results saved to database');
+          }
         }
+      } catch (error) {
+        console.error('Error saving results:', error);
       }
-    } catch (error) {
-      console.error('Error saving results:', error);
     }
     
     navigate("/results");
@@ -218,12 +217,13 @@ const Quiz = () => {
     );
   }
 
-  if (!quizSettings || !quiz) return null;
+  if (!quizSettings) return null;
 
-  const questions = quiz.questions;
+  const questions = quiz?.questions || sampleQuestions;
   const progress = ((currentQuestion + 1) / questions.length) * 100;
   const question = questions[currentQuestion];
   const selectedAnswer = selectedAnswers[currentQuestion];
+  const correctAnswerIndex = quiz ? question.correctAnswer : question.correct;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10 p-4">
@@ -257,7 +257,7 @@ const Quiz = () => {
           <CardContent className="space-y-3">
             {question.options.map((option: string, index: number) => {
               const isSelected = selectedAnswer === index;
-              const isCorrect = index === question.correctAnswer;
+              const isCorrect = index === correctAnswerIndex;
               const showCorrectAnswer = showFeedback && isCorrect;
               const showIncorrect = showFeedback && isSelected && !isCorrect;
 
@@ -283,10 +283,10 @@ const Quiz = () => {
           <Card className="mb-6 border-2 border-primary bg-primary/5">
             <CardContent className="pt-6">
               <p className="text-lg font-semibold mb-2">
-                {selectedAnswer === question.correctAnswer ? "✓ Correct!" : "✗ Incorrect"}
+                {selectedAnswer === correctAnswerIndex ? "✓ Correct!" : "✗ Incorrect"}
               </p>
               <p className="text-muted-foreground">
-                The correct answer is: <strong>{question.options[question.correctAnswer]}</strong>
+                The correct answer is: <strong>{question.options[correctAnswerIndex]}</strong>
               </p>
             </CardContent>
           </Card>

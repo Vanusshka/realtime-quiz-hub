@@ -9,6 +9,8 @@ import { Clock, Target, Trophy, LogOut, Zap, Brain, Users as UsersIcon } from "l
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  const [quizzes, setQuizzes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -20,19 +22,13 @@ const Dashboard = () => {
       
       if (parsedUser.userType === "teacher") {
         navigate("/teacher-dashboard");
+      } else {
+        loadQuizzes();
       }
     }
   }, [navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
-
-  const startQuiz = async (difficulty: string, mode: string) => {
-    localStorage.setItem("quizSettings", JSON.stringify({ difficulty, mode }));
-    
-    // Try to load quizzes from database
+  const loadQuizzes = async () => {
     try {
       const authToken = localStorage.getItem('authToken');
       if (authToken) {
@@ -43,16 +39,30 @@ const Dashboard = () => {
         });
         
         if (response.ok) {
-          const quizzes = await response.json();
-          console.log('✅ Loaded quizzes from database:', quizzes.length);
-          // Store available quizzes for quiz page to use
-          localStorage.setItem('availableQuizzes', JSON.stringify(quizzes));
+          const data = await response.json();
+          setQuizzes(data);
+          console.log('✅ Loaded', data.length, 'quizzes from database');
         }
       }
     } catch (error) {
-      console.log('⚠️ Using local quiz data');
+      console.log('⚠️ Could not load quizzes');
+    } finally {
+      setLoading(false);
     }
-    
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
+  const startQuiz = (quizId: string, difficulty: string, timeLimit: number) => {
+    localStorage.setItem("quizSettings", JSON.stringify({ 
+      quizId, 
+      difficulty, 
+      mode: "timed",
+      timeLimit 
+    }));
     navigate("/quiz");
   };
 
@@ -141,61 +151,73 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Quiz Mode Section */}
+        {/* Available Quizzes Section */}
         <div>
           <h2 className="text-3xl font-bold mb-6 flex items-center gap-3" style={{ color: '#ffffff', textShadow: '0 2px 10px rgba(0, 0, 0, 0.8)' }}>
             <Zap className="w-8 h-8" style={{ color: '#ffffff' }} />
-            Start Quiz
+            Available Quizzes
           </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            <Card 
-              className="hologram-card hover:shadow-lg transition-all cursor-pointer group"
-              onClick={() => startQuiz("medium", "timed")}
-            >
-              <CardHeader>
-                <Clock className="w-12 h-12 text-blue-500 mb-3 group-hover:scale-110 transition-transform" />
-                <CardTitle className="text-xl">Timed Quiz</CardTitle>
-                <CardDescription>Race against the clock!</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="hologram">
-                  Start Timed Quiz
-                </Button>
+          
+          {loading ? (
+            <Card className="hologram-card">
+              <CardContent className="py-12 text-center">
+                <p className="text-lg">Loading quizzes...</p>
               </CardContent>
             </Card>
-
-            <Card 
-              className="hologram-card hover:shadow-lg transition-all cursor-pointer group"
-              onClick={() => startQuiz("medium", "practice")}
-            >
-              <CardHeader>
-                <Brain className="w-12 h-12 text-purple-500 mb-3 group-hover:scale-110 transition-transform" />
-                <CardTitle className="text-xl">Practice Mode</CardTitle>
-                <CardDescription>Learn at your own pace</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="hologram">
-                  Start Practice
-                </Button>
+          ) : quizzes.length === 0 ? (
+            <Card className="hologram-card border-2 border-dashed">
+              <CardContent className="py-12 text-center">
+                <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <h3 className="text-xl font-semibold mb-2">No quizzes available</h3>
+                <p className="opacity-70">
+                  Check back later for new quizzes from your teachers
+                </p>
               </CardContent>
             </Card>
-
-            <Card 
-              className="hologram-card hover:shadow-lg transition-all cursor-pointer group"
-              onClick={() => startQuiz("medium", "competition")}
-            >
-              <CardHeader>
-                <Trophy className="w-12 h-12 text-amber-500 mb-3 group-hover:scale-110 transition-transform" />
-                <CardTitle className="text-xl">Competition</CardTitle>
-                <CardDescription>Compete with others!</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="hologram">
-                  Join Competition
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-6">
+              {quizzes.map((quiz) => {
+                const difficultyColors = {
+                  easy: 'text-green-500',
+                  medium: 'text-yellow-500',
+                  hard: 'text-red-500'
+                };
+                const iconColor = difficultyColors[quiz.difficulty as keyof typeof difficultyColors] || 'text-blue-500';
+                
+                return (
+                  <Card 
+                    key={quiz._id}
+                    className="hologram-card hover:shadow-lg transition-all cursor-pointer group"
+                    onClick={() => startQuiz(quiz._id, quiz.difficulty, quiz.timeLimit)}
+                  >
+                    <CardHeader>
+                      <Brain className={`w-12 h-12 ${iconColor} mb-3 group-hover:scale-110 transition-transform`} />
+                      <CardTitle className="text-xl">{quiz.title}</CardTitle>
+                      <CardDescription>
+                        <div className="flex items-center gap-2 flex-wrap mt-2">
+                          <Badge variant="outline" className="capitalize">
+                            {quiz.difficulty}
+                          </Badge>
+                          <Badge variant="secondary">
+                            {quiz.questions.length} Questions
+                          </Badge>
+                          <Badge variant="secondary">
+                            {Math.floor(quiz.timeLimit / 60)}min
+                          </Badge>
+                        </div>
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button className="w-full" variant="hologram">
+                        <Clock className="w-4 h-4 mr-2" />
+                        Start Quiz
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
       </main>
     </div>
