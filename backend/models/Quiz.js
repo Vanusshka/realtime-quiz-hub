@@ -13,6 +13,9 @@ const questionSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  explanation: {
+    type: String
+  },
   points: {
     type: Number,
     default: 10
@@ -47,6 +50,19 @@ const quizSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  isAIGenerated: {
+    type: Boolean,
+    default: false
+  },
+  topic: {
+    type: String,
+    trim: true
+  },
+  aiMetadata: {
+    generatedBy: String,
+    prompt: String,
+    generatedAt: Date
   },
   createdAt: {
     type: Date,

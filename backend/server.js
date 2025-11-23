@@ -32,6 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/quiz', require('./routes/quiz'));
 app.use('/api/users', require('./routes/users'));
+app.use('/api/gemini', require('./routes/gemini'));
 
 // Health check route
 app.get('/api/health', (req, res) => {

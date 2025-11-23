@@ -16,11 +16,11 @@ const Landing = () => {
 
         {/* Subtitle */}
         <div className="space-y-4 animate-slide-in-left">
-          <p 
+          <p
             className="text-xl md:text-2xl"
-            style={{ 
-              color: '#ffffff', 
-              textShadow: '0 2px 10px rgba(0, 0, 0, 0.8)' 
+            style={{
+              color: '#ffffff',
+              textShadow: '0 2px 10px rgba(0, 0, 0, 0.8)'
             }}
           >
             The Ultimate Interactive Quiz Platform
@@ -31,13 +31,13 @@ const Landing = () => {
         <div className="grid md:grid-cols-3 gap-6 mt-12 animate-slide-in-right">
           <div className="p-6 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 hover:bg-white/20 transition-all">
             <Zap className="w-10 h-10 text-yellow-400 mx-auto mb-3" />
-            <h3 
+            <h3
               className="text-lg font-semibold mb-2"
               style={{ color: '#ffffff', textShadow: '0 2px 8px rgba(0, 0, 0, 0.8)' }}
             >
               Real-Time Quizzes
             </h3>
-            <p 
+            <p
               className="text-sm"
               style={{ color: 'rgba(255, 255, 255, 0.8)', textShadow: '0 1px 5px rgba(0, 0, 0, 0.8)' }}
             >
@@ -47,13 +47,13 @@ const Landing = () => {
 
           <div className="p-6 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 hover:bg-white/20 transition-all">
             <Users className="w-10 h-10 text-blue-400 mx-auto mb-3" />
-            <h3 
+            <h3
               className="text-lg font-semibold mb-2"
               style={{ color: '#ffffff', textShadow: '0 2px 8px rgba(0, 0, 0, 0.8)' }}
             >
               Collaborative Learning
             </h3>
-            <p 
+            <p
               className="text-sm"
               style={{ color: 'rgba(255, 255, 255, 0.8)', textShadow: '0 1px 5px rgba(0, 0, 0, 0.8)' }}
             >
@@ -63,13 +63,13 @@ const Landing = () => {
 
           <div className="p-6 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 hover:bg-white/20 transition-all">
             <Trophy className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-            <h3 
+            <h3
               className="text-lg font-semibold mb-2"
               style={{ color: '#ffffff', textShadow: '0 2px 8px rgba(0, 0, 0, 0.8)' }}
             >
               Track Progress
             </h3>
-            <p 
+            <p
               className="text-sm"
               style={{ color: 'rgba(255, 255, 255, 0.8)', textShadow: '0 1px 5px rgba(0, 0, 0, 0.8)' }}
             >
@@ -98,11 +98,11 @@ const Landing = () => {
         </div>
 
         {/* Tagline */}
-        <p 
+        <p
           className="text-sm mt-8"
-          style={{ 
-            color: 'rgba(255, 255, 255, 0.6)', 
-            textShadow: '0 1px 5px rgba(0, 0, 0, 0.8)' 
+          style={{
+            color: 'rgba(255, 255, 255, 0.6)',
+            textShadow: '0 1px 5px rgba(0, 0, 0, 0.8)'
           }}
         >
           Empowering education through interactive assessments

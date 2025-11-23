@@ -158,6 +158,8 @@ const Quiz = () => {
       timeTaken,
       answers: selectedAnswers,
       quizTitle: quiz?.title || "Sample Quiz",
+      questions: questions,
+      quizData: quiz,
     };
     
     localStorage.setItem("quizResults", JSON.stringify(results));
@@ -265,14 +267,14 @@ const Quiz = () => {
                 <Button
                   key={index}
                   variant={isSelected ? "default" : "outline"}
-                  className={`w-full justify-start text-left h-auto py-4 px-6 text-base transition-all ${
+                  className={`w-full justify-start text-left h-auto py-4 px-6 text-base transition-all whitespace-normal ${
                     showCorrectAnswer ? "bg-success hover:bg-success border-success" : ""
                   } ${showIncorrect ? "bg-destructive hover:bg-destructive border-destructive" : ""}`}
                   onClick={() => handleAnswerSelect(index)}
                   disabled={showFeedback}
                 >
-                  <span className="font-semibold mr-3">{String.fromCharCode(65 + index)}.</span>
-                  {option}
+                  <span className="font-semibold mr-3 flex-shrink-0">{String.fromCharCode(65 + index)}.</span>
+                  <span className="break-words">{option}</span>
                 </Button>
               );
             })}

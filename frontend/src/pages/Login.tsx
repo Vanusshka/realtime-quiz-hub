@@ -104,21 +104,25 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-xl hologram-card animate-scale-in">
+      <Card className="w-full max-w-md shadow-2xl animate-scale-in border-white/20 glass-card-light" style={{
+        background: 'rgba(255, 255, 255, 0.08)',
+        backdropFilter: 'blur(40px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+      }}>
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center mb-2">
-            <GraduationCap className="w-8 h-8 text-primary-foreground" />
+          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center mb-2 shadow-lg">
+            <GraduationCap className="w-8 h-8 text-white" />
           </div>
-          <CardTitle className="text-3xl font-bold">
+          <CardTitle className="text-3xl font-bold text-white drop-shadow-lg">
             QuizMaster
           </CardTitle>
-          <CardDescription className="text-base">
+          <CardDescription className="text-base text-white/90 drop-shadow-md">
             Welcome! Login to start your quiz journey
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="text-white">
           <Tabs value={userType} onValueChange={(v) => setUserType(v as "student" | "teacher")}>
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/10 border-white/20">
               <TabsTrigger value="student" className="flex items-center gap-2">
                 <GraduationCap className="w-4 h-4" />
                 Student

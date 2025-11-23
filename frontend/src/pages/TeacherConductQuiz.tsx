@@ -118,21 +118,23 @@ const TeacherConductQuiz = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 {question.options.map((option: string, index: number) => {
-                  const isCorrect = index === question.correct;
+                  const isCorrect = index === (question.correctAnswer ?? question.correct);
 
                   return (
                     <div
                       key={index}
                       className={`w-full justify-start text-left h-auto py-4 px-6 text-base border-2 rounded-lg transition-all ${
-                        isCorrect ? "bg-success/10 border-success" : "bg-card border-border"
+                        isCorrect 
+                          ? "bg-green-100 dark:bg-green-900/30 border-green-500 dark:border-green-600" 
+                          : "bg-card border-border"
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="font-semibold text-lg">{String.fromCharCode(65 + index)}.</span>
-                        <span className={isCorrect ? "font-semibold" : ""}>{option}</span>
+                      <div className="flex items-start gap-3">
+                        <span className="font-semibold text-lg flex-shrink-0">{String.fromCharCode(65 + index)}.</span>
+                        <span className={`flex-1 break-words ${isCorrect ? "font-semibold text-green-700 dark:text-green-400" : ""}`}>{option}</span>
                         {isCorrect && (
-                          <Badge variant="default" className="ml-auto bg-success">
-                            Correct Answer
+                          <Badge className="ml-2 flex-shrink-0 bg-green-600 hover:bg-green-700 text-white">
+                            ✓ Correct Answer
                           </Badge>
                         )}
                       </div>
@@ -141,6 +143,22 @@ const TeacherConductQuiz = () => {
                 })}
               </CardContent>
             </Card>
+
+            {question.explanation && (
+              <Card className="border-2 border-blue-500 bg-blue-50 dark:bg-blue-950/30">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="text-blue-600 dark:text-blue-400">💡</span>
+                    Answer Explanation
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-base leading-relaxed text-blue-900 dark:text-blue-100">
+                    {question.explanation}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             <div className="flex items-center justify-between gap-4">
               <Button
