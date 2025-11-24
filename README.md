@@ -6,9 +6,11 @@ A full-stack real-time quiz application built with React, Node.js, Express, Mong
 
 ### For Teachers
 - 📝 Create custom quizzes with multiple-choice questions
+- 🤖 **AI-Powered Quiz Generation** with Google Gemini
 - 🎚️ Set difficulty levels (Easy, Medium, Hard)
 - ⏱️ Configure time limits for quizzes
-- 📊 View all created quizzes
+- 📊 View all created quizzes with correct answers highlighted
+- 💡 View AI-generated explanations for each question
 - 🗑️ Delete quizzes
 - 👥 Automatic visibility to all students
 
@@ -17,7 +19,9 @@ A full-stack real-time quiz application built with React, Node.js, Express, Mong
 - 🔍 View quiz details (difficulty, questions, time limit)
 - ✍️ Attempt quizzes with countdown timer
 - 📈 Automatic score calculation
-- 📊 View detailed results and breakdown
+- 📊 View detailed results with question-by-question analysis
+- 💡 **Get AI explanations** for incorrect answers
+- 🎯 Learn from mistakes with personalized feedback
 
 ### System Features
 - 🔐 JWT-based authentication
@@ -47,6 +51,7 @@ A full-stack real-time quiz application built with React, Node.js, Express, Mong
 - **Password Hashing:** bcryptjs
 - **Real-time:** Socket.IO
 - **Validation:** express-validator
+- **AI Integration:** Google Gemini API
 
 ## 📋 Prerequisites
 
@@ -73,14 +78,47 @@ npm install
 
 # Create .env file
 cp .env.example .env
+```
 
-# Edit .env with your MongoDB connection string
-# MONGODB_URI=your_mongodb_connection_string
-# JWT_SECRET=your_secret_key
-# PORT=5000
+**Configure Environment Variables:**
 
-# Start the backend server
+1. **Generate a JWT Secret:**
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+   ```
+   Copy the output and use it as your `JWT_SECRET` in `.env`
+
+2. **Get a Gemini API Key** (Required for AI quiz generation):
+   - Go to [Google AI Studio](https://aistudio.google.com/app/apikey)
+   - Sign in with your Google account
+   - Click "Create API Key"
+   - Copy the API key and paste it in your `.env` file as `GEMINI_API_KEY`
+   - The API has a free tier!
+
+3. **Setup MongoDB:**
+   - **Local MongoDB:** Use `mongodb://localhost:27018/quizmaster`
+   - **MongoDB Atlas (Cloud):**
+     1. Create account at [mongodb.com/atlas](https://mongodb.com/atlas)
+     2. Create a cluster
+     3. Get connection string
+     4. Update `MONGODB_URI` in `.env`
+
+4. **Your `.env` should look like:**
+   ```env
+   PORT=5000
+   NODE_ENV=development
+   MONGODB_URI=mongodb://localhost:27018/quizmaster
+   JWT_SECRET=<your_generated_secret_from_step_1>
+   GEMINI_API_KEY=<your_gemini_api_key_from_step_2>
+   ```
+
+**Start the backend server:**
+```bash
+# Development mode (with auto-restart)
 npm run dev
+
+# OR Production mode
+npm start
 ```
 
 The backend will run on `http://localhost:5000`
@@ -160,12 +198,42 @@ realtime-quiz/
 - `GET /api/quiz` - Get all quizzes (filtered by user role)
 - `GET /api/quiz/:id` - Get specific quiz by ID
 - `POST /api/quiz` - Create new quiz (teacher only)
+- `PUT /api/quiz/:id` - Update quiz (teacher only)
 - `DELETE /api/quiz/:id` - Delete quiz (teacher only)
 - `POST /api/quiz/:id/submit` - Submit quiz answers (student only)
+- `GET /api/quiz/:id/results` - Get quiz results
+
+### AI Features (Gemini)
+- `POST /api/gemini/generate-quiz` - Generate AI quiz (teacher only)
+- `POST /api/gemini/explain-question` - Get AI explanation for a question
+- `POST /api/gemini/learning-resources` - Get personalized learning resources
+- `GET /api/gemini/analyze-performance/:studentId` - Analyze student performance
+
+### User Management
+- `GET /api/users/me` - Get current user
+- `GET /api/users/leaderboard` - Get leaderboard
+- `GET /api/users/results` - Get user's quiz results
 
 ### Results
 - `GET /api/result/student/:studentId` - Get student's results
 - `GET /api/result/quiz/:quizId` - Get all results for a quiz
+
+## 🔄 Socket.IO Events
+
+### Client to Server
+- `join-quiz` - Join a quiz room
+- `start-quiz` - Start quiz (Teacher only)
+- `submit-answer` - Submit answer
+- `get-leaderboard` - Request leaderboard update
+- `end-quiz` - End quiz (Teacher only)
+
+### Server to Client
+- `user-joined` - User joined quiz
+- `user-left` - User left quiz
+- `quiz-started` - Quiz has started
+- `answer-submitted` - Answer was submitted
+- `leaderboard-update` - Leaderboard data
+- `quiz-ended` - Quiz has ended
 
 ## 🗄️ Database Schema
 
@@ -224,15 +292,26 @@ realtime-quiz/
 5. Submit and view results
 6. Verify result saved in MongoDB
 
-## 🔐 Environment Variables
+## 🔐 Security & Best Practices
 
-### Backend (.env)
+### Environment Variables
+All sensitive data should be in `backend/.env` (never commit this file!):
 ```env
-MONGODB_URI=mongodb://localhost:27018/quizmaster
-JWT_SECRET=your_super_secret_jwt_key_here
 PORT=5000
 NODE_ENV=development
+MONGODB_URI=mongodb://localhost:27018/quizmaster
+JWT_SECRET=<generated_secure_random_string>
+GEMINI_API_KEY=<your_gemini_api_key>
 ```
+
+### Security Checklist
+- ✅ `.env` is in `.gitignore`
+- ✅ Generate unique JWT_SECRET for each deployment
+- ✅ Use HTTPS in production
+- ✅ Enable CORS only for trusted origins
+- ✅ Implement rate limiting for API endpoints
+- ✅ Validate and sanitize all user inputs
+- ✅ Each developer gets their own Gemini API key
 
 ## 📦 Available Scripts
 
@@ -292,13 +371,14 @@ Student Dashboard → GET /api/quiz → Display Quizzes → Start Quiz
 - Verify token is stored in localStorage as `authToken`
 - Check token expiration (default: 24 hours)
 
-## 📚 Documentation
+## 🤖 AI Features
 
-Additional documentation available:
-- `backend/QUICK_START.md` - Backend setup guide
-- `backend/MONGODB_SETUP.md` - MongoDB configuration
-- `TESTING_GUIDE.md` - Comprehensive testing scenarios
-- `IMPLEMENTATION_SUMMARY.md` - Feature implementation details
+This project uses **Google Gemini AI** for:
+- **Automated Quiz Generation**: Generate quizzes on any topic with customizable difficulty
+- **Smart Explanations**: Get detailed explanations for correct and incorrect answers
+- **Personalized Learning**: AI-powered feedback to help students understand concepts
+
+To use AI features, you need a free Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
 
 ## 🤝 Contributing
 
