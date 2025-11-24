@@ -187,4 +187,64 @@ router.post('/explain-question', auth, async (req, res) => {
   }
 });
 
+// Get personalized recommendations after quiz completion (with auth)
+router.post('/quiz-recommendations', auth, async (req, res) => {
+  try {
+    if (req.user.userType !== 'student') {
+      return res.status(403).json({ message: 'This endpoint is only for students' });
+    }
+
+    const { quizTitle, quizTopic, score, totalQuestions, incorrectQuestions } = req.body;
+
+    if (!quizTitle || score === undefined || !totalQuestions) {
+      return res.status(400).json({ message: 'Quiz title, score, and total questions are required' });
+    }
+
+    const recommendations = await geminiService.generateQuizRecommendations(
+      quizTitle,
+      quizTopic,
+      score,
+      totalQuestions,
+      incorrectQuestions || []
+    );
+
+    res.json({
+      success: true,
+      recommendations: recommendations
+    });
+
+  } catch (error) {
+    console.error('Generate recommendations error:', error);
+    res.status(500).json({ message: 'Failed to generate recommendations', error: error.message });
+  }
+});
+
+// Get personalized recommendations (demo/public version - no auth required)
+router.post('/quiz-recommendations-demo', async (req, res) => {
+  try {
+    const { quizTitle, quizTopic, score, totalQuestions, incorrectQuestions } = req.body;
+
+    if (!quizTitle || score === undefined || !totalQuestions) {
+      return res.status(400).json({ message: 'Quiz title, score, and total questions are required' });
+    }
+
+    const recommendations = await geminiService.generateQuizRecommendations(
+      quizTitle,
+      quizTopic,
+      score,
+      totalQuestions,
+      incorrectQuestions || []
+    );
+
+    res.json({
+      success: true,
+      recommendations: recommendations
+    });
+
+  } catch (error) {
+    console.error('Generate recommendations error:', error);
+    res.status(500).json({ message: 'Failed to generate recommendations', error: error.message });
+  }
+});
+
 module.exports = router;
