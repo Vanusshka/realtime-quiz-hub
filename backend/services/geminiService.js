@@ -215,6 +215,89 @@ Return only the explanation text, no JSON or formatting.
       return null;
     }
   }
+
+  async generateQuizRecommendations(quizTitle, quizTopic, score, totalQuestions, incorrectQuestions) {
+    const performanceLevel = score / totalQuestions;
+    const needsImprovement = performanceLevel < 0.7;
+    
+    const prompt = `
+A student just completed a quiz with the following details:
+- Quiz Title: ${quizTitle}
+- Topic: ${quizTopic || quizTitle}
+- Score: ${score}/${totalQuestions} (${(performanceLevel * 100).toFixed(0)}%)
+${incorrectQuestions.length > 0 ? `- Questions they got wrong: ${incorrectQuestions.join(', ')}` : ''}
+
+Generate personalized learning recommendations to help them ${needsImprovement ? 'improve their understanding' : 'deepen their knowledge'} of this topic.
+
+Provide:
+1. 5-7 YouTube video recommendations (use realistic video titles that would exist for this topic)
+2. 3-5 helpful website/article links (use realistic URLs from educational sites like Khan Academy, MDN, W3Schools, GeeksforGeeks, freeCodeCamp, etc.)
+3. A brief motivational message
+
+Format as JSON:
+{
+  "message": "Brief personalized message based on their performance",
+  "youtubeVideos": [
+    {
+      "title": "Video title",
+      "channel": "Channel name",
+      "searchQuery": "exact search query to find this video on YouTube",
+      "description": "Why this video will help"
+    }
+  ],
+  "websites": [
+    {
+      "title": "Resource title",
+      "url": "Full URL",
+      "description": "What they'll learn from this resource"
+    }
+  ],
+  "studyTips": ["tip1", "tip2", "tip3"]
+}
+
+Make sure all YouTube search queries are specific and realistic. For websites, use actual educational platforms.
+`;
+
+    try {
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      // Extract JSON from response
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+      
+      throw new Error('Invalid response format');
+    } catch (error) {
+      console.error('Gemini API Error:', error);
+      // Fallback recommendations
+      return {
+        message: "Great effort! Keep learning and practicing to improve your skills.",
+        youtubeVideos: [
+          {
+            title: `${quizTopic || quizTitle} - Complete Tutorial`,
+            channel: "Educational Channel",
+            searchQuery: `${quizTopic || quizTitle} tutorial`,
+            description: "Comprehensive overview of the topic"
+          }
+        ],
+        websites: [
+          {
+            title: "Learn More",
+            url: `https://www.google.com/search?q=${encodeURIComponent(quizTopic || quizTitle)}`,
+            description: "Search for more resources on this topic"
+          }
+        ],
+        studyTips: [
+          "Review the questions you got wrong",
+          "Practice regularly to reinforce concepts",
+          "Take notes while studying"
+        ]
+      };
+    }
+  }
 }
 
 module.exports = new GeminiService();

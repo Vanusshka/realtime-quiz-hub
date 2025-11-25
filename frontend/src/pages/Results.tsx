@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Trophy, Clock, RotateCcw, Home, CheckCircle2, XCircle } from "lucide-react";
+import { Trophy, Clock, RotateCcw, Home, CheckCircle2, XCircle, Youtube, ExternalLink, Lightbulb, BookOpen } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
 const Results = () => {
@@ -11,15 +11,108 @@ const Results = () => {
   const [results, setResults] = useState<any>(null);
   const [explanations, setExplanations] = useState<{ [key: number]: string }>({});
   const [loadingExplanations, setLoadingExplanations] = useState<{ [key: number]: boolean }>({});
+  const [recommendations, setRecommendations] = useState<any>(null);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
 
   useEffect(() => {
     const resultsData = localStorage.getItem("quizResults");
     if (!resultsData) {
       navigate("/dashboard");
     } else {
-      setResults(JSON.parse(resultsData));
+      const parsedResults = JSON.parse(resultsData);
+      setResults(parsedResults);
+      
+      // Fetch recommendations for students
+      // Check both localStorage.userType and user.userType
+      let userType = localStorage.getItem('userType');
+      if (!userType) {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          try {
+            const user = JSON.parse(userStr);
+            userType = user.userType;
+          } catch (e) {
+            console.error('Error parsing user data:', e);
+          }
+        }
+      }
+      
+      if (userType === 'student') {
+        fetchRecommendations(parsedResults);
+      }
     }
   }, [navigate]);
+
+  const fetchRecommendations = async (resultsData: any) => {
+    setLoadingRecommendations(true);
+    try {
+      const authToken = localStorage.getItem('authToken');
+      let userType = localStorage.getItem('userType');
+      
+      // Try to get userType from user object if not directly available
+      if (!userType) {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          try {
+            const user = JSON.parse(userStr);
+            userType = user.userType;
+          } catch (e) {
+            console.error('Error parsing user:', e);
+          }
+        }
+      }
+
+      // Get incorrect questions
+      const incorrectQuestions = resultsData.questions
+        .map((q: any, idx: number) => {
+          const userAnswer = resultsData.answers[idx];
+          const correctAnswer = q.correctAnswer ?? q.correct;
+          if (userAnswer !== correctAnswer) {
+            return q.question;
+          }
+          return null;
+        })
+        .filter((q: any) => q !== null);
+
+      const requestBody = {
+        quizTitle: resultsData.quizTitle || 'Quiz',
+        quizTopic: resultsData.quizData?.topic || resultsData.quizTitle,
+        score: resultsData.score,
+        totalQuestions: resultsData.total,
+        incorrectQuestions: incorrectQuestions,
+      };
+
+      // Use demo endpoint if no auth token, otherwise use authenticated endpoint
+      const endpoint = authToken 
+        ? 'http://localhost:5000/api/gemini/quiz-recommendations'
+        : 'http://localhost:5000/api/gemini/quiz-recommendations-demo';
+      
+      const headers: any = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (authToken) {
+        headers['x-auth-token'] = authToken;
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(requestBody),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setRecommendations(data.recommendations);
+      } else {
+        console.error('Failed to fetch recommendations');
+      }
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+    } finally {
+      setLoadingRecommendations(false);
+    }
+  };
 
   const fetchExplanation = async (questionIndex: number, question: any, correctAnswer: number, userAnswer: number) => {
     console.log('Fetching explanation for question:', questionIndex);
@@ -183,6 +276,113 @@ const Results = () => {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+
+        {recommendations && (
+          <Card className="mb-6 border border-white/20 backdrop-blur-sm bg-black/30 shadow-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Lightbulb className="w-6 h-6 text-yellow-400" />
+                Personalized Learning Recommendations
+              </CardTitle>
+              <CardDescription className="text-white/70">
+                {recommendations.message}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* YouTube Videos */}
+              {recommendations.youtubeVideos && recommendations.youtubeVideos.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <Youtube className="w-5 h-5 text-red-500" />
+                    Recommended YouTube Videos
+                  </h3>
+                  <div className="space-y-3">
+                    {recommendations.youtubeVideos.map((video: any, index: number) => (
+                      <div key={index} className="p-4 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors">
+                        <div className="flex items-start gap-3">
+                          <Youtube className="w-5 h-5 text-red-500 flex-shrink-0 mt-1" />
+                          <div className="flex-1">
+                            <a
+                              href={`https://www.youtube.com/results?search_query=${encodeURIComponent(video.searchQuery)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-white font-semibold hover:text-blue-400 transition-colors"
+                            >
+                              {video.title}
+                            </a>
+                            <p className="text-sm text-white/60 mt-1">by {video.channel}</p>
+                            <p className="text-sm text-white/80 mt-2">{video.description}</p>
+                          </div>
+                          <ExternalLink className="w-4 h-4 text-white/40 flex-shrink-0" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Website Resources */}
+              {recommendations.websites && recommendations.websites.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-blue-400" />
+                    Helpful Websites & Articles
+                  </h3>
+                  <div className="space-y-3">
+                    {recommendations.websites.map((website: any, index: number) => (
+                      <div key={index} className="p-4 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors">
+                        <div className="flex items-start gap-3">
+                          <ExternalLink className="w-5 h-5 text-blue-400 flex-shrink-0 mt-1" />
+                          <div className="flex-1">
+                            <a
+                              href={website.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-white font-semibold hover:text-blue-400 transition-colors"
+                            >
+                              {website.title}
+                            </a>
+                            <p className="text-xs text-white/50 mt-1 break-all">{website.url}</p>
+                            <p className="text-sm text-white/80 mt-2">{website.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Study Tips */}
+              {recommendations.studyTips && recommendations.studyTips.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <Lightbulb className="w-5 h-5 text-yellow-400" />
+                    Study Tips
+                  </h3>
+                  <ul className="space-y-2">
+                    {recommendations.studyTips.map((tip: string, index: number) => (
+                      <li key={index} className="flex items-start gap-2 text-white">
+                        <span className="text-yellow-400 flex-shrink-0">•</span>
+                        <span className="text-white">{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {loadingRecommendations && (
+          <Card className="mb-6 border border-white/20 backdrop-blur-sm bg-black/30 shadow-xl">
+            <CardContent className="py-12 text-center">
+              <div className="flex flex-col items-center gap-3">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                <p className="text-white/80">Generating personalized recommendations...</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {results.questions && (
           <Card className="mb-6 border border-white/20 backdrop-blur-sm bg-black/30 shadow-xl">
