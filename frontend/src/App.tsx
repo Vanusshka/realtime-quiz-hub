@@ -27,9 +27,9 @@ const App = () => (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, background: '#000000' }}>
       <Aurora
         colorStops={["#7cff67", "#b19eef", "#5227ff"]}
-        blend={0.5}
-        amplitude={1.0}
-        speed={1.0}
+        blend={0.6}
+        amplitude={1.2}
+        speed={0.8}
       />
     </div>
     <div style={{ position: 'relative', zIndex: 1 }}>

@@ -69,9 +69,10 @@ struct ColorStop {
 void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
   
-  // Create vignette effect - darker in center, brighter at edges
-  float vignette = length(uv - 0.5) * 1.5;
-  vignette = smoothstep(0.0, 1.0, vignette);
+  // Create corner-based vignette - colors only in corners
+  vec2 corner = abs(uv - 0.5) * 2.0;
+  float edgeDist = max(corner.x, corner.y);
+  float cornerGlow = smoothstep(0.2, 0.9, edgeDist);
   
   ColorStop colors[3];
   colors[0] = ColorStop(uColorStops[0], 0.0);
@@ -86,12 +87,12 @@ void main() {
   height = exp(height);
   height = (uv.y * 2.0 - height + 0.2);
   
-  float intensity = 0.7 * height;
+  float intensity = 0.8 * height;
   float midPoint = 0.20;
   float auroraAlpha = smoothstep(midPoint - uBlend * 0.5, midPoint + uBlend * 0.5, intensity);
   
-  // Apply vignette to make colors appear at edges
-  vec3 auroraColor = intensity * rampColor * 0.6 * vignette;
+  // Apply corner glow to make colors appear only at edges
+  vec3 auroraColor = intensity * rampColor * 0.7 * cornerGlow;
   fragColor = vec4(auroraColor, 1.0);
 }`;
 
