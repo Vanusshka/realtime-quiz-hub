@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import ColorBends from "./components/ColorBends";
+import Aurora from "./components/Aurora";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -24,19 +24,14 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ColorBends
-      colors={["#667eea", "#764ba2", "#f093fb", "#4facfe", "#00f2fe", "#43e97b"]}
-      rotation={30}
-      speed={0.3}
-      scale={0.5}
-      frequency={1.5}
-      warpStrength={1.8}
-      mouseInfluence={1.0}
-      parallax={0.7}
-      noise={0.03}
-      transparent={false}
-      style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}
-    />
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, background: '#000000' }}>
+      <Aurora
+        colorStops={["#7cff67", "#b19eef", "#5227ff"]}
+        blend={0.5}
+        amplitude={1.0}
+        speed={1.0}
+      />
+    </div>
     <div style={{ position: 'relative', zIndex: 1 }}>
     <TooltipProvider>
       <Toaster />
