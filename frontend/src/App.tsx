@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Aurora from "./components/Aurora";
+import DarkVeil from "./components/DarkVeil";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -25,11 +25,13 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, background: '#000000' }}>
-      <Aurora
-        colorStops={["#7cff67", "#b19eef", "#5227ff"]}
-        blend={0.6}
-        amplitude={1.2}
-        speed={0.8}
+      <DarkVeil 
+        speed={2.5}
+        hueShift={273}
+        noiseIntensity={0.06}
+        scanlineFrequency={2.1}
+        scanlineIntensity={0}
+        warpAmount={3.5}
       />
     </div>
     <div style={{ position: 'relative', zIndex: 1 }}>
