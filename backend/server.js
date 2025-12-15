@@ -21,11 +21,26 @@ const io = socketIo(server, {
   }
 });
 
-// Connect to MongoDB
-connectDB();
+// Connect to databases
+const initializeDatabases = async () => {
+  try {
+    // Connect to MongoDB (required)
+    await connectDB();
+    
+    // Connect to Redis (optional - for caching)
+    await connectRedis();
+    
+    console.log('✅ Database initialization complete');
+  } catch (error) {
+    console.error('❌ Database initialization failed:', error.message);
+    process.exit(1);
+  }
+};
 
-// Connect to Redis (optional - for caching)
-connectRedis();
+// Initialize databases
+initializeDatabases().catch(error => {
+  console.error('💥 Failed to initialize databases:', error);
+});
 
 // Middleware
 app.use(cors());
@@ -38,9 +53,69 @@ app.use('/api/quiz', require('./routes/quiz'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/gemini', require('./routes/gemini'));
 
+// Test endpoint to verify deployment
+app.get('/api/test-deployment', (req, res) => {
+  res.json({ 
+    message: 'New deployment working!', 
+    timestamp: new Date().toISOString(),
+    version: '2.0'
+  });
+});
+
 // Health check route
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Server is running' });
+app.get('/api/health', async (req, res) => {
+  const health = {
+    status: 'OK',
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    deployment: 'v2.0-updated',
+    services: {}
+  };
+
+  // Check MongoDB connection
+  try {
+    const mongoose = require('mongoose');
+    console.log('🔍 MongoDB readyState:', mongoose.connection.readyState);
+    
+    if (mongoose.connection.readyState === 1) {
+      await mongoose.connection.db.admin().ping();
+      health.services.mongodb = 'connected';
+      console.log('✅ MongoDB health check passed');
+    } else {
+      health.services.mongodb = `disconnected (state: ${mongoose.connection.readyState})`;
+      health.status = 'DEGRADED';
+      console.log('❌ MongoDB not connected');
+    }
+  } catch (error) {
+    health.services.mongodb = `error: ${error.message}`;
+    health.status = 'DEGRADED';
+    console.log('❌ MongoDB health check failed:', error.message);
+  }
+
+  // Check Redis connection
+  try {
+    const { getRedisClient } = require('./config/redis');
+    const redisClient = getRedisClient();
+    if (redisClient && redisClient.isReady) {
+      health.services.redis = 'connected';
+    } else {
+      health.services.redis = 'not available';
+    }
+  } catch (error) {
+    health.services.redis = 'not available';
+  }
+
+  // Check Gemini service
+  try {
+    const geminiService = require('./services/geminiService');
+    health.services.gemini = geminiService.isEnabled ? 'enabled' : 'disabled';
+  } catch (error) {
+    health.services.gemini = 'error';
+  }
+
+  console.log('🏥 Health check result:', health);
+  const statusCode = health.status === 'OK' ? 200 : 503;
+  res.status(statusCode).json(health);
 });
 
 // Socket.IO connection handling
@@ -172,6 +247,7 @@ app.use((err, req, res, next) => {
 // Start server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+  console.log(`🔗 Health check: /api/health`);
 });

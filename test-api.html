@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Quiz API Test</h1>
+    <button onclick="testAPI()">Test AI Quiz Generation</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                // First, register a test user
+                const registerResponse = await fetch('https://smartquizapp-production-cffd.up.railway.app/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: 'Test User',
+                        email: 'test' + Date.now() + '@example.com',
+                        password: 'password123',
+                        userType: 'teacher'
+                    })
+                });
+                
+                const registerData = await registerResponse.json();
+                console.log('Register response:', registerData);
+                
+                if (registerData.token) {
+                    // Now try to generate a quiz
+                    const quizResponse = await fetch('https://smartquizapp-production-cffd.up.railway.app/api/gemini/generate-quiz', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-auth-token': registerData.token
+                        },
+                        body: JSON.stringify({
+                            topic: 'history',
+                            difficulty: 'easy',
+                            questionCount: 5
+                        })
+                    });
+                    
+                    const quizData = await quizResponse.json();
+                    console.log('Quiz response:', quizData);
+                    
+                    if (quizResponse.ok) {
+                        resultDiv.innerHTML = '<h2>SUCCESS!</h2><pre>' + JSON.stringify(quizData, null, 2) + '</pre>';
+                    } else {
+                        resultDiv.innerHTML = '<h2>Quiz Generation Failed:</h2><pre>' + JSON.stringify(quizData, null, 2) + '</pre>';
+                    }
+                } else {
+                    resultDiv.innerHTML = '<h2>Registration Failed:</h2><pre>' + JSON.stringify(registerData, null, 2) + '</pre>';
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = '<h2>Error:</h2><pre>' + error.message + '</pre>';
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

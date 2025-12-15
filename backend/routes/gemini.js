@@ -42,8 +42,24 @@ router.post('/generate-quiz', auth, async (req, res) => {
       return res.status(400).json({ message: 'Topic, difficulty, and question count are required' });
     }
 
+    // Check if Gemini service is enabled
+    if (!geminiService.isEnabled) {
+      return res.status(503).json({ 
+        message: 'AI service is not available', 
+        error: 'GEMINI_API_KEY is not configured' 
+      });
+    }
+
+    console.log(`🤖 Generating quiz: ${topic} (${difficulty}, ${questionCount} questions)`);
+
     // Generate quiz using Gemini
     const generatedQuiz = await geminiService.generateQuiz(topic, difficulty, questionCount);
+
+    if (!generatedQuiz || !generatedQuiz.questions) {
+      throw new Error('Invalid quiz data generated');
+    }
+
+    console.log(`✅ Quiz generated successfully: ${generatedQuiz.title}`);
 
     // Save to database
     const quiz = new Quiz({
@@ -57,6 +73,7 @@ router.post('/generate-quiz', auth, async (req, res) => {
     });
 
     await quiz.save();
+    console.log(`💾 Quiz saved to database with ID: ${quiz._id}`);
 
     res.json({
       message: 'Quiz generated successfully',
@@ -64,8 +81,31 @@ router.post('/generate-quiz', auth, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Generate quiz error:', error);
-    res.status(500).json({ message: 'Failed to generate quiz', error: error.message });
+    console.error('❌ Generate quiz error:', error);
+    
+    // Provide specific error messages
+    let errorMessage = 'Failed to generate quiz';
+    let statusCode = 500;
+
+    if (error.message.includes('Authentication failed')) {
+      errorMessage = 'Database authentication failed';
+      statusCode = 503;
+    } else if (error.message.includes('ECONNREFUSED')) {
+      errorMessage = 'Database connection refused';
+      statusCode = 503;
+    } else if (error.message.includes('Gemini')) {
+      errorMessage = 'AI service error';
+      statusCode = 503;
+    } else if (error.message.includes('timeout')) {
+      errorMessage = 'Request timeout - please try again';
+      statusCode = 408;
+    }
+
+    res.status(statusCode).json({ 
+      message: errorMessage, 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
