@@ -307,6 +307,90 @@ Make sure all YouTube search queries are specific and realistic. For websites, u
       };
     }
   }
+
+  async generateLearningResources(topics, studentLevel = 'intermediate') {
+    if (!this.isEnabled) {
+      throw new Error('Gemini service is not enabled. Please set GEMINI_API_KEY.');
+    }
+
+    try {
+      const prompt = `Generate comprehensive learning resources for a ${studentLevel} level student who needs to improve in these topics: ${topics.join(', ')}.
+
+For each topic, provide:
+1. Key concepts to focus on
+2. Study materials (books, articles, videos)
+3. Practice activities
+4. Study tips
+5. Estimated time to master
+
+Also create a personalized study plan.
+
+Return the response in this JSON format:
+{
+  "resources": [
+    {
+      "topic": "Topic Name",
+      "keyConcepts": ["concept1", "concept2"],
+      "studyMaterials": [
+        {
+          "title": "Resource Title",
+          "type": "video/article/book",
+          "description": "Brief description",
+          "url": "optional URL"
+        }
+      ],
+      "practiceActivities": ["activity1", "activity2"],
+      "studyTips": ["tip1", "tip2"],
+      "estimatedTime": "2-3 weeks"
+    }
+  ],
+  "studyPlan": "Detailed week-by-week study plan"
+}`;
+
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      // Clean and parse JSON
+      const cleanedText = text.replace(/```json\n?|\n?```/g, '').trim();
+      return JSON.parse(cleanedText);
+    } catch (error) {
+      console.error('Error generating learning resources:', error);
+      throw error;
+    }
+  }
+
+  async analyzePerformance(results) {
+    if (!this.isEnabled) {
+      throw new Error('Gemini service is not enabled. Please set GEMINI_API_KEY.');
+    }
+
+    try {
+      const prompt = `Analyze this student's quiz performance data and provide insights:
+
+${JSON.stringify(results, null, 2)}
+
+Provide analysis in this JSON format:
+{
+  "strengths": ["strength1", "strength2"],
+  "topicsToImprove": ["topic1", "topic2"],
+  "recommendations": ["recommendation1", "recommendation2"],
+  "overallScore": 85,
+  "improvementAreas": ["area1", "area2"]
+}`;
+
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      // Clean and parse JSON
+      const cleanedText = text.replace(/```json\n?|\n?```/g, '').trim();
+      return JSON.parse(cleanedText);
+    } catch (error) {
+      console.error('Error analyzing performance:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new GeminiService();

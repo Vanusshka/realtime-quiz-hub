@@ -22,7 +22,7 @@ const LearningResources = () => {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
 
       // Get performance analysis
-      const analysisResponse = await fetch(`http://localhost:5000/api/gemini/analyze-performance/${user.id}`, {
+      const analysisResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/gemini/analyze-performance/${user.id}`, {
         headers: {
           'x-auth-token': authToken || '',
         },
@@ -34,7 +34,7 @@ const LearningResources = () => {
 
         // Get learning resources based on weak topics
         if (analysisData.analysis.topicsToImprove.length > 0) {
-          const resourcesResponse = await fetch('http://localhost:5000/api/gemini/learning-resources', {
+          const resourcesResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/gemini/learning-resources`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
