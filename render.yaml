@@ -1,0 +1,35 @@
+services:
+  # Backend API
+  - type: web
+    name: quiz-backend
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        fromDatabase:
+          name: quiz-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false
+
+  # Frontend
+  - type: web
+    name: quiz-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://quiz-backend.onrender.com
+
+databases:
+  - name: quiz-db
+    databaseName: quizmaster
+    user: quiz_user

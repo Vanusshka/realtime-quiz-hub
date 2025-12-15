@@ -2,8 +2,10 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    // Check if MongoDB URI is provided
-    if (!process.env.MONGODB_URI) {
+    // Check if MongoDB URI is provided (try Railway variables first, then fallback)
+    const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URL || process.env.MONGO_PUBLIC_URL;
+    
+    if (!mongoUri) {
       console.warn('⚠️  MongoDB URI not provided. Running without database.');
       console.warn('⚠️  To use MongoDB Atlas:');
       console.warn('   1. Go to https://www.mongodb.com/cloud/atlas');
@@ -13,7 +15,7 @@ const connectDB = async () => {
       return;
     }
 
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
+    const conn = await mongoose.connect(mongoUri);
 
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     console.log(`📊 Database: ${conn.connection.name}`);

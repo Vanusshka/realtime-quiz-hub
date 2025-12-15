@@ -4,14 +4,20 @@ class GeminiService {
   constructor() {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      throw new Error('GEMINI_API_KEY is not set in environment variables');
+      console.warn('⚠️  GEMINI_API_KEY is not set. AI features will be disabled.');
+      this.isEnabled = false;
+      return;
     }
     console.log('Gemini API Key loaded:', apiKey.substring(0, 10) + '...');
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    this.isEnabled = true;
   }
 
   async listAvailableModels() {
+    if (!this.isEnabled) {
+      throw new Error('Gemini service is not enabled. Please set GEMINI_API_KEY.');
+    }
     try {
       const models = await this.genAI.listModels();
       console.log('Available models:', models);
@@ -22,6 +28,9 @@ class GeminiService {
   }
 
   async listModels() {
+    if (!this.isEnabled) {
+      throw new Error('Gemini service is not enabled. Please set GEMINI_API_KEY.');
+    }
     try {
       const models = await this.genAI.listModels();
       console.log('Available models:', models.map(m => m.name));

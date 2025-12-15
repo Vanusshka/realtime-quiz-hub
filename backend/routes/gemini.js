@@ -5,6 +5,24 @@ const geminiService = require('../services/geminiService');
 const Quiz = require('../models/Quiz');
 const Result = require('../models/Result');
 
+// Test Gemini API connection (no auth required)
+router.get('/test', async (req, res) => {
+  try {
+    if (!geminiService.isEnabled) {
+      return res.status(503).json({ 
+        status: 'disabled', 
+        message: 'Gemini API is not configured' 
+      });
+    }
+    res.json({ 
+      status: 'enabled', 
+      message: 'Gemini API is working!' 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Test available models
 router.get('/test-models', auth, async (req, res) => {
   try {
