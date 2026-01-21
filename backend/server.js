@@ -24,15 +24,22 @@ const io = socketIo(server, {
 // Connect to MongoDB
 connectDB();
 
-// Connect to Redis (optional - for caching)
+// Connect to Redis
 connectRedis();
-
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// -----------------------------
+// PUBLIC TEST ROUTE
+// -----------------------------
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Frontend can reach backend!' });
+});
+
+// -----------------------------
+// ROUTES
+// -----------------------------
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/quiz', require('./routes/quiz'));
 app.use('/api/users', require('./routes/users'));
@@ -43,30 +50,25 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
-// Socket.IO connection handling
+// -----------------------------
+// SOCKET.IO LOGIC
+// -----------------------------
 const activeQuizzes = new Map();
 const activeUsers = new Map();
 
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
-  // User joins a quiz room
   socket.on('join-quiz', ({ quizId, userId, userName, userType }) => {
     socket.join(quizId);
-    
-    if (!activeQuizzes.has(quizId)) {
-      activeQuizzes.set(quizId, {
-        participants: [],
-        answers: new Map(),
-        startTime: null
-      });
-    }
 
-    const quiz = activeQuizzes.get(quizId);
+    if (!activeQuizzes.has(quizId)) {
+      activeQuizzes.set(quizId, { participants: [], answers: new Map(), startTime: null });
+    }
+const quiz = activeQuizzes.get(quizId);
     quiz.participants.push({ userId, userName, userType, socketId: socket.id });
     activeUsers.set(socket.id, { quizId, userId, userName });
 
-    // Notify all participants
     io.to(quizId).emit('user-joined', {
       userId,
       userName,
@@ -77,34 +79,20 @@ io.on('connection', (socket) => {
     console.log(`${userName} joined quiz ${quizId}`);
   });
 
-  // Teacher starts quiz
   socket.on('start-quiz', ({ quizId, questions }) => {
     const quiz = activeQuizzes.get(quizId);
     if (quiz) {
       quiz.startTime = Date.now();
-      io.to(quizId).emit('quiz-started', {
-        startTime: quiz.startTime,
-        questions
-      });
+      io.to(quizId).emit('quiz-started', { startTime: quiz.startTime, questions });
       console.log(`Quiz ${quizId} started`);
     }
   });
-
-  // Student submits answer
   socket.on('submit-answer', ({ quizId, userId, questionId, answer, timeSpent }) => {
     const quiz = activeQuizzes.get(quizId);
     if (quiz) {
-      if (!quiz.answers.has(userId)) {
-        quiz.answers.set(userId, []);
-      }
-      quiz.answers.get(userId).push({
-        questionId,
-        answer,
-        timeSpent,
-        timestamp: Date.now()
-      });
+      if (!quiz.answers.has(userId)) quiz.answers.set(userId, []);
+      quiz.answers.get(userId).push({ questionId, answer, timeSpent, timestamp: Date.now() });
 
-      // Notify teacher of submission
       io.to(quizId).emit('answer-submitted', {
         userId,
         questionId,
@@ -112,40 +100,35 @@ io.on('connection', (socket) => {
       });
     }
   });
-
-  // Get real-time leaderboard
   socket.on('get-leaderboard', ({ quizId }) => {
     const quiz = activeQuizzes.get(quizId);
     if (quiz) {
-      const leaderboard = Array.from(quiz.answers.entries()).map(([userId, answers]) => {
-        const participant = quiz.participants.find(p => p.userId === userId);
-        return {
-          userId,
-          userName: participant?.userName || 'Unknown',
-          score: answers.length * 10, // Simple scoring
-          answersCount: answers.length
-        };
-      }).sort((a, b) => b.score - a.score);
+      const leaderboard = Array.from(quiz.answers.entries())
+        .map(([userId, answers]) => {
+          const participant = quiz.participants.find(p => p.userId === userId);
+          return {
+            userId,
+            userName: participant?.userName || 'Unknown',
+            score: answers.length * 10,
+            answersCount: answers.length
+          };
+        })
+        .sort((a, b) => b.score - a.score);
 
       socket.emit('leaderboard-update', leaderboard);
     }
   });
 
-  // End quiz
-  socket.on('end-quiz', ({ quizId }) => {
-    io.to(quizId).emit('quiz-ended', {
-      endTime: Date.now()
-    });
+socket.on('end-quiz', ({ quizId }) => {
+    io.to(quizId).emit('quiz-ended', { endTime: Date.now() });
     console.log(`Quiz ${quizId} ended`);
   });
 
-  // Handle disconnection
   socket.on('disconnect', () => {
     const user = activeUsers.get(socket.id);
     if (user) {
       const { quizId, userName } = user;
       const quiz = activeQuizzes.get(quizId);
-      
       if (quiz) {
         quiz.participants = quiz.participants.filter(p => p.socketId !== socket.id);
         io.to(quizId).emit('user-left', {
@@ -153,14 +136,12 @@ io.on('connection', (socket) => {
           totalParticipants: quiz.participants.length
         });
       }
-      
       activeUsers.delete(socket.id);
     }
     console.log('Client disconnected:', socket.id);
   });
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ 
@@ -169,7 +150,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
+// -----------------------------
+// START SERVER
+// -----------------------------
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
