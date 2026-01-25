@@ -1,36 +1,36 @@
-# 🎯 QuizMaster - Real-Time Quiz Application
+#  QuizMaster - Real-Time Quiz Application
 
 A full-stack real-time quiz application built with React, Node.js, Express, MongoDB, and Socket.IO. Teachers can create quizzes, and students can attempt them with real-time scoring and result tracking.
 
-## ✨ Features
+##  Features
 
 ### For Teachers
-- 📝 Create custom quizzes with multiple-choice questions
-- 🤖 **AI-Powered Quiz Generation** with Google Gemini
-- 🎚️ Set difficulty levels (Easy, Medium, Hard)
-- ⏱️ Configure time limits for quizzes
-- 📊 View all created quizzes with correct answers highlighted
-- 💡 View AI-generated explanations for each question
-- 🗑️ Delete quizzes
-- 👥 Automatic visibility to all students
+-  Create custom quizzes with multiple-choice questions
+-  **AI-Powered Quiz Generation** with Google Gemini
+-  Set difficulty levels (Easy, Medium, Hard)
+-  Configure time limits for quizzes
+-  View all created quizzes with correct answers highlighted
+-  View AI-generated explanations for each question
+-  Delete quizzes
+-  Automatic visibility to all students
 
 ### For Students
-- 📚 Browse available quizzes from database
-- 🔍 View quiz details (difficulty, questions, time limit)
-- ✍️ Attempt quizzes with countdown timer
-- 📈 Automatic score calculation
-- 📊 View detailed results with question-by-question analysis
-- 💡 **Get AI explanations** for incorrect answers
-- 🎯 Learn from mistakes with personalized feedback
+-  Browse available quizzes from database
+-  View quiz details (difficulty, questions, time limit)
+-  Attempt quizzes with countdown timer
+-  Automatic score calculation
+-  View detailed results with question-by-question analysis
+-  **Get AI explanations** for incorrect answers
+-  Learn from mistakes with personalized feedback
 
 ### System Features
-- 🔐 JWT-based authentication
-- 👤 Role-based access control (Teacher/Student)
-- 💾 MongoDB persistent storage
-- ⚡ Real-time data synchronization
-- 🔄 Offline fallback with localStorage
-- ⏲️ Time tracking for quiz attempts
-- ✅ Answer validation
+-  JWT-based authentication
+-  Role-based access control (Teacher/Student)
+-  MongoDB persistent storage
+-  Real-time data synchronization
+-  Offline fallback with localStorage
+-  Time tracking for quiz attempts
+-  Answer validation
 
 ## 🛠️ Tech Stack
 
@@ -53,13 +53,13 @@ A full-stack real-time quiz application built with React, Node.js, Express, Mong
 - **Validation:** express-validator
 - **AI Integration:** Google Gemini API
 
-## 📋 Prerequisites
+##  Prerequisites
 
 - Node.js (v16 or higher)
 - MongoDB Atlas account or local MongoDB instance
 - npm or yarn package manager
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### 1. Clone the Repository
 
@@ -146,7 +146,7 @@ docker-compose up -d
 
 This will start MongoDB on port `27018`
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 realtime-quiz/
@@ -218,7 +218,6 @@ realtime-quiz/
 - `GET /api/result/student/:studentId` - Get student's results
 - `GET /api/result/quiz/:quizId` - Get all results for a quiz
 
-## 🔄 Socket.IO Events
 
 ### Client to Server
 - `join-quiz` - Join a quiz room
@@ -235,7 +234,7 @@ realtime-quiz/
 - `leaderboard-update` - Leaderboard data
 - `quiz-ended` - Quiz has ended
 
-## 🗄️ Database Schema
+##  Database Schema
 
 ### Users Collection
 ```javascript
@@ -275,7 +274,7 @@ realtime-quiz/
 }
 ```
 
-## 🧪 Testing
+##  Testing
 
 ### Test as Teacher
 1. Navigate to `http://localhost:8081/`
@@ -292,7 +291,7 @@ realtime-quiz/
 5. Submit and view results
 6. Verify result saved in MongoDB
 
-## 🔐 Security & Best Practices
+##  Security & Best Practices
 
 ### Environment Variables
 All sensitive data should be in `backend/.env` (never commit this file!):
@@ -305,15 +304,15 @@ GEMINI_API_KEY=<your_gemini_api_key>
 ```
 
 ### Security Checklist
-- ✅ `.env` is in `.gitignore`
-- ✅ Generate unique JWT_SECRET for each deployment
-- ✅ Use HTTPS in production
-- ✅ Enable CORS only for trusted origins
-- ✅ Implement rate limiting for API endpoints
-- ✅ Validate and sanitize all user inputs
-- ✅ Each developer gets their own Gemini API key
+-  `.env` is in `.gitignore`
+-  Generate unique JWT_SECRET for each deployment
+-  Use HTTPS in production
+-  Enable CORS only for trusted origins
+-  Implement rate limiting for API endpoints
+-  Validate and sanitize all user inputs
+-  Each developer gets their own Gemini API key
 
-## 📦 Available Scripts
+##  Available Scripts
 
 ### Backend
 ```bash
@@ -329,7 +328,7 @@ npm run preview # Preview production build
 npm run lint    # Run ESLint
 ```
 
-## 🎨 UI Components
+##  UI Components
 
 Built with Radix UI and styled with Tailwind CSS:
 - Buttons, Cards, Dialogs
@@ -339,7 +338,7 @@ Built with Radix UI and styled with Tailwind CSS:
 - Tabs and navigation
 - Responsive design
 
-## 🔄 Data Flow
+##  Data Flow
 
 ### Quiz Creation Flow
 ```
@@ -354,7 +353,7 @@ Student Dashboard → GET /api/quiz → Display Quizzes → Start Quiz
 → POST /api/quiz/:id/submit → MongoDB → Results Page
 ```
 
-## 🚧 Troubleshooting
+##  Troubleshooting
 
 ### Backend won't start
 - Check MongoDB connection string in `.env`
@@ -371,7 +370,7 @@ Student Dashboard → GET /api/quiz → Display Quizzes → Start Quiz
 - Verify token is stored in localStorage as `authToken`
 - Check token expiration (default: 24 hours)
 
-## 🤖 AI Features
+##  AI Features
 
 This project uses **Google Gemini AI** for:
 - **Automated Quiz Generation**: Generate quizzes on any topic with customizable difficulty
@@ -380,7 +379,7 @@ This project uses **Google Gemini AI** for:
 
 To use AI features, you need a free Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
 
-## 🤝 Contributing
+##  Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -388,15 +387,15 @@ To use AI features, you need a free Gemini API key from [Google AI Studio](https
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
+##  License
 
 This project is licensed under the ISC License.
 
-## 👥 Authors
+##  Authors
 
 QuizMaster Development Team
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - Radix UI for accessible components
 - Tailwind CSS for styling
