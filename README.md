@@ -32,7 +32,7 @@ A full-stack real-time quiz application built with React, Node.js, Express, Mong
 -  Time tracking for quiz attempts
 -  Answer validation
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Frontend
 - **Framework:** React 18 with TypeScript
@@ -188,7 +188,7 @@ realtime-quiz/
 └── README.md
 ```
 
-## 🔌 API Endpoints
+##  API Endpoints
 
 ### Authentication
 - `POST /api/auth/register` - Register new user
@@ -402,6 +402,3 @@ QuizMaster Development Team
 - Socket.IO for real-time capabilities
 - MongoDB for database solution
 
----
-
-**Built with ❤️ for education**
